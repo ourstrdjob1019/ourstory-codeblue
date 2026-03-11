@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>진실 탐사대: CODE BLUE</title>
+    <style>
+        /* [Global Styles] */
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --accent-cyan: #00e5ff;
+            --accent-red: #ff3d00;
+            --accent-orange: #ff9100;
+            --accent-green: #00e676;
+            --accent-yellow: #ffea00;
+            --font-mono: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Noto Sans KR', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1600px;
+            height: 100vh;
+            position: relative;
+            overflow-y: auto;
+            background: #0a0a0a;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        /* 화면 전환용 유틸리티 */
+        .page {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 100%;
+            padding: 40px;
+            box-sizing: border-box;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        .active { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes flashRed { 0% { box-shadow: 0 0 10px var(--accent-red); } 50% { box-shadow: 0 0 30px var(--accent-red); } 100% { box-shadow: 0 0 10px var(--accent-red); } }
+        @keyframes pulseBorder { 0% { border-color: #fff; } 50% { border-color: var(--accent-red); } 100% { border-color: #fff; } }
+        @keyframes textGlow { 0% { text-shadow: 0 0 5px var(--accent-red); } 50% { text-shadow: 0 0 20px var(--accent-red); } 100% { text-shadow: 0 0 5px var(--accent-red); } }
+        @keyframes bossPop { 
+            0% { transform: scale(0.1); opacity: 0; } 
+            70% { transform: scale(1.05); opacity: 1; } 
+            100% { transform: scale(1); opacity: 1; } 
+        }
+        @keyframes blinkText { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
+        @keyframes stampEffect { 0% { transform: scale(3); opacity: 0; } 100% { transform: scale(1) rotate(-10deg); opacity: 1; } }
+        
+        @keyframes slideUpFade {
+            0% { transform: translateY(30px); opacity: 0; }
+            20% { transform: translateY(0); opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translateY(-20px); opacity: 0; }
+        }
+
+        /* [Page 1: Intro & Video & Alert] */
+        #page-1 { background-color: #000; justify-content: center; }
+
+        .main-title {
+            text-align: center;
+            margin-bottom: 60px;
+            z-index: 10;
+        }
+        
+        .title-text-1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 20px var(--accent-cyan);
+            margin-right: 15px;
+            display: inline-block;
+        }
+
+        .title-text-2 {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--accent-red);
+            text-shadow: 0 0 30px var(--accent-red);
+            animation: textGlow 2s infinite alternate;
+            display: inline-block;
+        }
+
+        .btn-start {
+            padding: 20px 50px;
+            font-size: 1.5rem;
+            background: var(--accent-red);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            animation: flashRed 2s infinite;
+            z-index: 10;
+        }
+
+        .alert-box {
+            background-color: #2d2d2d;
+            border: 4px solid var(--accent-yellow);
+            border-radius: 15px;
+            padding: 40px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 0 50px rgba(255, 234, 0, 0.3);
+            display: none;
+            text-align: left;
+            z-index: 5;
+        }
+        
+        .alert-header {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            color: var(--accent-yellow);
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            border-bottom: 1px solid #555;
+            padding-bottom: 15px;
+        }
+        
+        .alert-content {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #fff;
+            margin-bottom: 30px;
+        }
+
+        #intro-video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+        }
+
+        #intro-video-overlay video {
+            width: 90%;
+            height: 80%;
+            max-height: 80vh;
+            border: none;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            object-fit: contain;
+            background-color: #000;
+        }
+
+        .check-btn {
+            position: absolute;
+            bottom: 50px;
+            right: 50px;
+            padding: 15px 30px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            border: 2px solid var(--accent-red);
+            font-weight: bold;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 30;
+            animation: pulseBorder 2s infinite;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+        .check-btn:hover { background: var(--accent-red); color: #000; }
+
+        /* [Page 2: Chaos Feed] */
+        #page-2 { justify-content: flex-start; padding-top: 80px; max-width: 800px; margin: 0 auto; }
+        
+        .feed-item {
+            background: var(--card-bg);
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            padding: 25px;
+            border: 1px solid #333;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+        .feed-visible { opacity: 1; transform: translateY(0); }
+        .feed-header { display: flex; align-items: center; margin-bottom: 15px; }
+        .user-icon { width: 40px; height: 40px; background: #555; border-radius: 50%; margin-right: 15px; }
+        .username { font-weight: bold; color: var(--text-main); font-size: 1.1rem; }
+        .feed-img-placeholder { width: 100%; height: auto; display: flex; align-items: center; justify-content: center; color: #777; margin-bottom: 15px; border-radius: 8px; overflow: hidden; }
+        .feed-img-placeholder img { width: 100%; height: auto; object-fit: contain; }
+        .feed-text { font-size: 1.1rem; line-height: 1.5; }
+        .feed-highlight { color: var(--accent-red); font-weight: bold; }
+
+        /* [Page 3: Team Building] */
+        #page-3 { text-align: center; }
+        
+        .card-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; width: 100%; margin-top: 50px; }
+        
+        .role-card { 
+            background-color: transparent; 
+            width: 100%; 
+            height: 500px; 
+            perspective: 1000px; 
+            cursor: pointer; 
+        }
+        
+        .card-inner { 
+            position: relative; 
+            width: 100%; 
+            height: 100%; 
+            text-align: center; 
+            transition: transform 0.6s; 
+            transform-style: preserve-3d; 
+        }
+        
+        .role-card.flipped .card-inner { transform: rotateY(180deg); }
+        
+        .card-front, .card-back { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            -webkit-backface-visibility: hidden; 
+            backface-visibility: hidden; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 15px; 
+            box-sizing: border-box; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            background: #222; 
+            overflow: hidden; 
+        }
+        
+        .card-front { border: 2px solid #fff; }
+        .card-back { border: 2px solid var(--accent-cyan); transform: rotateY(180deg); }
+        .card-img { width: 100%; height: 100%; object-fit: contain; padding: 10px; box-sizing: border-box; }
+
+        /* [Page 4: Main Dashboard] */
+        #page-4 { justify-content: flex-start; padding-top: 0; max-width: 100%; }
+
+        .page-nav { display: flex; gap: 10px; margin-bottom: 10px; position: absolute; top: 20px; left: 20px; z-index: 200; }
+        .nav-btn { background: rgba(0,0,0,0.7); border: 1px solid #666; color: #ccc; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; transition: all 0.3s; }
+        .nav-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+        .team-control-panel { position: absolute; top: 20px; right: 20px; z-index: 200; background: rgba(0,0,0,0.7); border: 1px solid #666; color: #ccc; padding: 8px 15px; border-radius: 5px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+        .team-control-panel button { background: #333; color: white; border: 1px solid #555; padding: 3px 10px; cursor: pointer; border-radius: 3px; }
+        .team-control-panel button:hover { background: var(--accent-cyan); color: black; }
+        .team-count-display { font-weight: bold; font-size: 1.1rem; color: var(--accent-cyan); min-width: 20px; text-align: center; }
+
+        .panic-section {
+            width: 100%; margin-bottom: 20px; text-align: center; padding: 20px; background: #0f0f0f; border-bottom: 2px solid #333; position: sticky; top: 0; z-index: 100; box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+        }
+        .panic-title { font-size: 1.5rem; color: #aaa; margin-bottom: 15px; letter-spacing: 2px; }
+        .panic-display { display: flex; justify-content: center; align-items: baseline; gap: 20px; margin-bottom: 20px; }
+        .panic-value { font-size: 4rem; font-weight: bold; font-family: var(--font-mono); line-height: 1; transition: color 0.5s; }
+        .panic-status { font-size: 1.8rem; font-weight: bold; transition: color 0.5s; }
+        .big-progress-bg { width: 90%; height: 30px; background: #222; border-radius: 15px; margin: 0 auto; overflow: hidden; border: 2px solid #444; position: relative; }
+        .big-progress-fill { height: 100%; width: 90%; background: var(--accent-red); transition: width 0.8s, background-color 0.8s; box-shadow: 0 0 30px var(--accent-red); }
+        .status-danger { color: var(--accent-red); text-shadow: 0 0 10px rgba(255, 61, 0, 0.5); animation: textGlow 2s infinite alternate; }
+        .bar-danger { background-color: var(--accent-red); box-shadow: 0 0 20px var(--accent-red); }
+        .status-warning { color: var(--accent-orange); }
+        .bar-warning { background-color: var(--accent-orange); box-shadow: 0 0 15px var(--accent-orange); }
+        .status-safe { color: var(--accent-green); }
+        .bar-safe { background-color: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
+
+        .dashboard-tabs { display: flex; justify-content: center; gap: 20px; margin: 20px 0; width: 100%; padding: 0 20px; box-sizing: border-box; }
+        .tab-btn { background: #222; border: 1px solid #444; color: #888; padding: 15px 30px; font-size: 1.2rem; font-weight: bold; border-radius: 10px; cursor: pointer; transition: all 0.3s; flex: 1; max-width: 400px; }
+        .tab-btn.active-tab { background: #333; color: #fff; border-color: var(--accent-cyan); box-shadow: 0 0 15px rgba(0, 229, 255, 0.2); }
+        .tab-btn.threat-tab.active-tab { border-color: var(--accent-red); box-shadow: 0 0 15px rgba(255, 61, 0, 0.2); }
+
+        .dashboard-view { width: 100%; padding: 0 20px 40px 20px; box-sizing: border-box; display: none; animation: fadeIn 0.5s; flex-direction: column; align-items: center; }
+        .dashboard-view.active-view { display: flex; }
+
+        .threat-title { font-size: 1.8rem; color: #fff; margin-bottom: 20px; text-align: center; font-weight: bold; }
+        .threat-highlight { color: var(--accent-red); text-shadow: 0 0 5px var(--accent-red); }
+
+        .weapon-container {
+            width: 100%;
+            max-width: 1600px; 
+            display: flex;
+            justify-content: center;
+            gap: 40px; 
+            margin-bottom: 30px;
+            flex-wrap: wrap; 
+            position: relative;
+        }
+
+        .weapon-card-flipper {
+            width: 360px; 
+            height: 600px; 
+            perspective: 1000px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .weapon-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s; transform-style: preserve-3d; }
+        .weapon-card-flipper.flipped .weapon-card-inner { transform: rotateY(180deg); }
+        .weapon-front, .weapon-back {
+            position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 12px; box-sizing: border-box; background: #1a1a1a; border: 1px solid #444; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 0;
+        }
+        .weapon-front { z-index: 2; overflow: hidden; }
+        .weapon-back { transform: rotateY(180deg); background: #fff; justify-content: center; padding: 0; }
+
+        .weapon-card-flipper.cleared { opacity: 0.5; }
+        .weapon-card-flipper.cleared .weapon-front { filter: grayscale(100%); }
+        #weapon-1-flip.cleared, #weapon-2-flip.cleared, #weapon-3-flip.cleared { opacity: 1; } 
+
+        .weapon-name { color: #fff; font-weight: bold; margin: 15px 0; display: block; font-size: 1.5rem; border-bottom: 1px solid #333; width: 90%; padding-bottom: 5px; }
+        .weapon-img { width: 100%; height: 400px; object-fit: contain; background-color: #000; display: block; }
+        .qr-img-card { width: 80%; height: 80%; object-fit: contain; }
+
+        .team-input-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            width: 95%;
+            margin-top: auto;
+            margin-bottom: 15px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .team-input-grid::-webkit-scrollbar { width: 5px; }
+        .team-input-grid::-webkit-scrollbar-track { background: #111; }
+        .team-input-grid::-webkit-scrollbar-thumb { background: var(--accent-cyan); border-radius: 5px; }
+
+        .input-group { display: flex; align-items: center; background: #111; border: 1px solid #444; border-radius: 5px; padding: 4px; }
+        .input-label { color: var(--accent-cyan); font-weight: bold; margin-right: 5px; font-size: 0.8rem; }
+        .team-input { width: 100%; background: transparent; border: none; color: #fff; text-align: center; font-family: 'Noto Sans KR', sans-serif; font-size: 0.9rem; }
+        .team-input:focus { outline: none; }
+        .team-input.solved { background-color: rgba(0, 230, 118, 0.2); color: var(--accent-green); font-weight: bold; font-size: 0.75rem; }
+
+        .input-code {
+            background: #111; border: 1px solid var(--accent-cyan); color: #fff; padding: 10px; width: 80%; text-align: center; font-family: 'Noto Sans KR', sans-serif; font-size: 1.2rem; border-radius: 5px; margin-top: auto; margin-bottom: 20px;
+        }
+        .input-code:focus { outline: none; box-shadow: 0 0 5px var(--accent-cyan); }
+        .input-code, .replay-btn { pointer-events: auto; }
+
+        #weapon-4 {
+            display: none; width: 95%; max-width: 1200px; border: 5px solid var(--accent-red); box-shadow: 0 0 50px rgba(255, 61, 0, 0.6); background: #2a0a0a; animation: bossPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); flex-direction: row; justify-content: space-between; align-items: stretch; padding: 30px;
+        }
+        #weapon-4 .boss-left { width: 45%; display: flex; flex-direction: column; align-items: center; justify-content: center;}
+        #weapon-4 .weapon-name { color: var(--accent-red); font-size: 2.5rem; text-shadow: 0 0 15px var(--accent-red); border-bottom: none; margin-bottom: 15px; }
+        #weapon-4 .weapon-img { width: 100%; height: auto; max-height: 500px; margin-bottom: 0; border: 2px solid var(--accent-red); }
+        #weapon-4 .boss-right { width: 50%; display: flex; flex-direction: column; padding-left: 30px; border-left: 2px solid #555; position: relative; }
+        .boss-top-group { display: flex; flex-direction: column; align-items: center; margin-bottom: 10px; }
+        #weapon-4 .input-code { border-color: var(--accent-red); font-size: 1.5rem; padding: 15px; margin-top: 10px; width: 90%; margin-bottom: 0; }
+
+        .danger-alert { color: var(--accent-red); font-weight: bold; font-size: 1.8rem; margin-bottom: 10px; text-align: center; animation: blinkText 0.5s infinite alternate; border: 2px solid var(--accent-red); padding: 10px 20px; border-radius: 8px; background: rgba(255, 61, 0, 0.15); width: 90%; white-space: nowrap; }
+        .money-laundering-alert { color: var(--accent-yellow); font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; text-align: center; text-shadow: 0 0 5px rgba(255, 234, 0, 0.5); }
+        #crime-money-amount { font-family: var(--font-mono); font-size: 1.5rem; color: #FFD700; }
+        #fading-words-zone { width: 100%; height: 150px; position: relative; margin-bottom: 10px; }
+        .fading-word { position: absolute; color: #fff; text-shadow: 0 0 15px var(--accent-cyan); font-size: 1.4rem; font-weight: bold; opacity: 0; white-space: nowrap; transition: opacity 1s; width: 18%; text-align: center; }
+        .fading-word.visible { opacity: 1; }
+        .fading-word.vanishing { transition: all 6s ease-out; opacity: 0; filter: blur(8px); transform: scale(1.5) translateY(-20px); }
+
+        .final-warning-text {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: auto; text-align: center; font-size: 2.8rem; font-weight: bold; color: #fff; text-shadow: 0 0 10px var(--accent-red), 0 0 30px var(--accent-red), 0 0 50px var(--accent-red); background: rgba(0, 0, 0, 0.95); padding: 30px 50px; border: 3px solid var(--accent-red); box-shadow: 0 0 30px var(--accent-red); z-index: 100; display: none; white-space: nowrap; animation: finalWarningImpact 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .boss-news-container { flex-grow: 1; background: rgba(0, 0, 0, 0.5); border: 1px dashed var(--accent-red); border-radius: 5px; padding: 15px; overflow: hidden; position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-height: 200px; }
+        .boss-news-item { color: var(--accent-red); font-family: var(--font-mono); font-size: 1rem; margin-bottom: 8px; border-bottom: 1px dotted #555; padding-bottom: 5px; animation: slideUpFade 1.2s ease-out; }
+
+        .replay-btn { display: none; margin-top: 5px; background: #333; color: var(--accent-cyan); border: 1px solid var(--accent-cyan); padding: 5px 15px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; font-weight: bold; z-index: 10; margin-bottom: 10px; }
+        .replay-btn:hover { background: var(--accent-cyan); color: #000; }
+
+        .news-section { width: 95%; margin: 0 auto 40px auto; text-align: center; background: #000; padding: 10px; border-radius: 10px; border: 1px solid #333; }
+        .news-img { max-width: 100%; height: auto; border-radius: 5px; display: block; margin: 0 auto; }
+        .news-board-title { color: #ffea00; font-size: 1.8rem; margin-bottom: 15px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255, 234, 0, 0.5); }
+
+        .clear-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 50; border-radius: 10px; backdrop-filter: blur(8px); }
+        .clear-header { font-size: 4rem; font-weight: bold; color: var(--accent-green); text-shadow: 0 0 30px var(--accent-green); border: 5px solid var(--accent-green); padding: 20px 50px; animation: textGlow 2s infinite alternate; text-align: center; margin-bottom: 40px; }
+        .final-card-row { display: flex; gap: 20px; margin-bottom: 20px; justify-content: center; width: 100%; }
+        .final-card { width: 200px; background: #222; border: 2px solid var(--accent-green); border-radius: 10px; padding: 10px; position: relative; text-align: center; box-shadow: 0 0 20px rgba(0, 230, 118, 0.2); }
+        .final-card img { width: 100%; border-radius: 5px; opacity: 0.5; }
+        .stamp-cleared { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); border: 5px solid var(--accent-green); color: var(--accent-green); font-size: 1.5rem; font-weight: bold; padding: 10px; background: rgba(0,0,0,0.8); white-space: nowrap; z-index: 10; animation: stampEffect 0.5s ease-out forwards; }
+
+        .team-section { width: 95%; background: #151515; padding: 30px; border-radius: 15px; border: 1px solid #333; }
+        .team-title { color: #fff; font-size: 1.8rem; margin-bottom: 20px; font-weight: bold; text-align: center; }
+        .team-title span { color: var(--accent-cyan); text-shadow: 0 0 5px var(--accent-cyan); }
+        .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .team-card { background: #222; border: 1px solid #444; border-radius: 10px; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        .team-name-input { background: transparent; border: none; border-bottom: 1px solid #666; color: #fff; text-align: center; font-size: 1.1rem; width: 80%; margin-bottom: 10px; }
+        .team-score-box { font-size: 2rem; font-weight: bold; color: var(--accent-cyan); font-family: var(--font-mono); margin: 10px 0; display: flex; align-items: center; gap: 10px; }
+        .score-btn { background: #333; border: none; color: #fff; width: 25px; height: 25px; border-radius: 50%; cursor: pointer; font-size: 1rem; }
+        .score-btn:hover { background: #555; }
+        
+        .team-items { display: flex; gap: 10px; margin-top: 15px; }
+        .item-icon-btn { width: 35px; height: 35px; background: #333; border: 1px solid #555; border-radius: 5px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; opacity: 0.3; transition: all 0.2s; }
+        .item-icon-btn.active { opacity: 1; border-color: var(--accent-yellow); background: rgba(255, 234, 0, 0.1); box-shadow: 0 0 10px var(--accent-yellow); }
+
+        .squad-item-section { width: 95%; margin-top: 30px; padding: 20px; background: #1a1a1a; border-radius: 10px; border: 1px solid #333; }
+        .squad-item-title { color: var(--accent-yellow); font-size: 1.5rem; margin-bottom: 20px; font-weight: bold; text-align: center; }
+        .squad-item-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .squad-item { background: #222; border: 1px solid var(--accent-yellow); border-radius: 10px; padding: 20px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 150px; }
+        .squad-item-name { color: #fff; font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
+        .squad-item-icon { font-size: 3rem; margin-bottom: 10px; }
+
+        .btn-next { margin-top: 20px; padding: 15px 40px; background: transparent; border: 2px solid var(--accent-cyan); color: var(--accent-cyan); border-radius: 30px; font-size: 1.1rem; cursor: pointer; transition: 0.3s; }
+        .btn-next:hover { background: rgba(0, 229, 255, 0.1); }
+        .hidden { display: none; }
+
+        #mission-video-popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
+        
+        #mission-video-popup video { 
+            width: 80%; 
+            max-width: 1000px; 
+            height: auto; 
+            max-height: 80vh;
+            box-shadow: 0 0 30px var(--accent-cyan); 
+            border: none;
+            background-color: #000;
+        }
+
+        .popup-close-btn { margin-top: 20px; padding: 10px 30px; background: transparent; border: 2px solid #fff; color: #fff; font-size: 1.2rem; border-radius: 5px; cursor: pointer; }
+        .popup-close-btn:hover { background: #fff; color: #000; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div id="page-1" class="page active">
+            <div class="main-title">
+                <span class="title-text-1">진실 탐사대 :</span>
+                <span class="title-text-2">[CODE BLUE]</span>
+            </div>
+
+            <button id="start-btn" class="btn-start" onclick="playVideo()">⚠️ 시뮬레이션 시작 (Click)</button>
+            <div id="intro-video-overlay" class="video-overlay">
+                <video id="intro-video" src="" controls autoplay></video>
+                <button class="check-btn" id="intro-check-btn" onclick="finishVideo()">🚨 상황 발생 확인 (ACCESS)</button>
+            </div>
+            <div id="alert-popup" class="alert-box">
+                <div class="alert-header"><span class="alert-icon">🔔</span> 긴급재난문자</div>
+                <div class="alert-content"><strong>[발송] 행정안전부</strong><br><br>[식수 사용 금지 명령] 금일 09:00부로 국내 전역 상수도망에서 정체불명의 미생물 다수 검출 제보.<br><br>뇌신경 마비 등 치명적 위험 가능성 있음. 시민 여러분께서는 별도 안내 시까지 <strong>수돗물 음용 및 세안, 샤워를 전면 금지</strong> 바랍니다.</div>
+                <div class="alert-footer">- 대한민국 재난안전대책본부 -</div>
+            </div>
+            <button id="to-p2" class="btn-next hidden" onclick="changePage(2)">상황 확인하기 ></button>
+        </div>
+
+        <div id="page-2" class="page">
+            <h2 style="color:var(--accent-red); align-self:center; margin-bottom:30px; font-size:2rem;">LIVE FEED</h2>
+            <div class="feed-item" id="feed-1">
+                <div class="feed-header"><div class="user-icon"></div><span class="username">@Truth_Seeker_99</span></div>
+                <div class="feed-img-placeholder"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EB%9D%BC%EC%9D%B4%EB%B8%8C%ED%94%BC%EB%93%9C1.png" referrerpolicy="no-referrer"></div>
+                <div class="feed-text">미쳤다... 엄마가 쌀 씻다가 뭔가 꿈틀거려서 봤더니 이거 나옴;;; 😱 <br>#수돗물괴담 #좀비바이러스</div>
+            </div>
+            <div class="feed-item" id="feed-2">
+                <div class="feed-header"><div class="user-icon" style="background:crimson"></div><span class="username">@LoveMam</span></div>
+                <div class="feed-img-placeholder"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EB%9D%BC%EC%9D%B4%EB%B8%8C%ED%94%BC%EB%93%9C2.png" referrerpolicy="no-referrer"></div>
+                <div class="feed-text">댓글 난리 났네요.. 진짜 마시면 안 되나 봐요 ㅠㅠ</div>
+            </div>
+            <div class="feed-item" id="feed-3">
+                <div class="feed-header"><div class="user-icon" style="background:blue"></div><span class="username">@CleanWater_Seller</span></div>
+                <div class="feed-img-placeholder"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EB%9D%BC%EC%9D%B4%EB%B8%8C%ED%94%BC%EB%93%9C3.png" referrerpolicy="no-referrer"></div>
+                <div class="feed-text">우리 애 팔 좀 보세요ㅠㅠ 물 닿았는데 바로 수포 올라왔어요..<span class="feed-highlight"> 절대 씻지마세요!!</span></div>
+            </div>
+            <button class="btn-next" onclick="changePage(3)">진실 탐사대 소집 ></button>
+        </div>
+
+        <div id="page-3" class="page">
+            <h2 style="color:var(--accent-cyan); font-size:2rem; margin-bottom:10px;">진실 레이드 파티 결성</h2>
+            <p style="color:#aaa;">카드를 터치하여 당신의 클래스(Role)를 확인하세요.</p>
+            <div class="card-container">
+                <div class="role-card" onclick="flipCard(this)">
+                    <div class="card-inner">
+                        <div class="card-front"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%ED%81%B4%EB%9E%98%EC%8A%A4%EC%B9%B4%EB%93%9C%20%EB%92%B7%EB%A9%B41.png" class="card-img" referrerpolicy="no-referrer"></div>
+                        <div class="card-back"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%ED%81%B4%EB%9E%98%EC%8A%A4%EC%B9%B4%EB%93%9C%20%EC%95%9E%EB%A9%B41.png" class="card-img" referrerpolicy="no-referrer"></div>
+                    </div>
+                </div>
+                <div class="role-card" onclick="flipCard(this)">
+                    <div class="card-inner">
+                        <div class="card-front"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%ED%81%B4%EB%9E%98%EC%8A%A4%EC%B9%B4%EB%93%9C%20%EB%92%B7%EB%A9%B42.png" class="card-img" referrerpolicy="no-referrer"></div>
+                        <div class="card-back"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%ED%81%B4%EB%9E%98%EC%8A%A4%EC%B9%B4%EB%93%9C%20%EC%95%9E%EB%A9%B42.png" class="card-img" referrerpolicy="no-referrer"></div>
+                    </div>
+                </div>
+                <div class="role-card" onclick="flipCard(this)">
+                    <div class="card-inner">
+                        <div class="card-front"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%ED%81%B4%EB%9E%98%EC%8A%A4%EC%B9%B4%EB%93%9C%20%EB%92%B7%EB%A9%B43.png" class="card-img" referrerpolicy="no-referrer"></div>
+                        <div class="card-back"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%ED%81%B4%EB%9E%98%EC%8A%A4%EC%B9%B4%EB%93%9C%20%EC%95%9E%EB%A9%B43.png" class="card-img" referrerpolicy="no-referrer"></div>
+                    </div>
+                </div>
+                <div class="role-card" onclick="flipCard(this)">
+                    <div class="card-inner">
+                        <div class="card-front"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%ED%81%B4%EB%9E%98%EC%8A%A4%EC%B9%B4%EB%93%9C%20%EB%92%B7%EB%A9%B44.png" class="card-img" referrerpolicy="no-referrer"></div>
+                        <div class="card-back"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%ED%81%B4%EB%9E%98%EC%8A%A4%EC%B9%B4%EB%93%9C%20%EC%95%9E%EB%A9%B44.png" class="card-img" referrerpolicy="no-referrer"></div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-next" style="margin-top:50px;" onclick="changePage(4)">작전 본부 진입 (DASHBOARD) ></button>
+        </div>
+
+        <div id="page-4" class="page">
+            <div class="page-nav">
+                <button class="nav-btn" onclick="changePage(2)">📡 라이브 피드</button>
+                <button class="nav-btn" onclick="changePage(3)">🆔 역할 설정</button>
+            </div>
+            
+            <div class="team-control-panel">
+                조(Team) 설정: 
+                <button onclick="adjustTeamCount(-1)">-</button>
+                <span id="team-count-display" class="team-count-display">6</span>
+                <button onclick="adjustTeamCount(1)">+</button>
+            </div>
+
+            <div class="panic-section">
+                <div class="panic-title">📉 도시 공포 지수 (CITY PANIC LEVEL)</div>
+                <div class="panic-display">
+                    <div id="panic-value" class="panic-value status-danger">90%</div>
+                    <div id="panic-text" class="panic-status status-danger">심각 (혼란과 카오스)</div>
+                </div>
+                <div class="big-progress-bg">
+                    <div id="panic-bar" class="big-progress-fill bar-danger"></div>
+                </div>
+            </div>
+
+            <div class="dashboard-tabs">
+                <button class="tab-btn threat-tab active-tab" onclick="switchDashboardTab('threats')">🚨 위협 분석실</button>
+                <button class="tab-btn" onclick="switchDashboardTab('squad')">🛡️ 진실탐사대 본부</button>
+            </div>
+
+            <div id="view-threats" class="dashboard-view active-view">
+                <div class="threat-title">TARGET: <span class="threat-highlight">정보조작단의 위협</span></div>
+                
+                <div class="weapon-container">
+                    <div class="clear-overlay">
+                        <div class="final-card-row">
+                            <div class="final-card"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EC%9C%84%ED%98%91%EC%B9%B4%EB%93%9C1%20%EC%84%A0%EB%8F%99%EA%B3%BC%20%EB%82%A0%EC%A1%B0.png" referrerpolicy="no-referrer"><div class="stamp-cleared">해결 완료</div></div>
+                            <div class="final-card"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EC%9C%84%ED%98%91%EC%B9%B4%EB%93%9C2%20%EA%B6%8C%EC%9C%84%EC%9D%98%20%EA%B0%80%EB%A9%B4.png" referrerpolicy="no-referrer"><div class="stamp-cleared">해결 완료</div></div>
+                        </div>
+                        <div class="clear-header">MISSION CLEAR</div>
+                        <div class="final-card-row">
+                            <div class="final-card"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EC%9C%84%ED%98%91%EC%B9%B4%EB%93%9C3%20%ED%95%84%ED%84%B0%EB%B2%84%EB%B8%94.png" referrerpolicy="no-referrer"><div class="stamp-cleared">해결 완료</div></div>
+                            <div class="final-card"><img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EC%9C%84%ED%98%91%EC%B9%B4%EB%93%9C4%20%EC%A0%95%EB%B3%B4%EC%A1%B0%EC%9E%91%EB%8B%A8.png" referrerpolicy="no-referrer"><div class="stamp-cleared">해결 완료</div></div>
+                        </div>
+                    </div>
+
+                    <div class="weapon-card-flipper" id="weapon-1-flip" onclick="flipWeapon(this)">
+                        <div class="weapon-card-inner">
+                            <div class="weapon-front">
+                                <span class="weapon-name">선동과 날조</span>
+                                <img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EC%9C%84%ED%98%91%EC%B9%B4%EB%93%9C1%20%EC%84%A0%EB%8F%99%EA%B3%BC%20%EB%82%A0%EC%A1%B0.png" class="weapon-img" alt="선동과 날조" referrerpolicy="no-referrer">
+                                <div class="team-input-grid" id="input-grid-w1" onclick="event.stopPropagation()">
+                                    </div>
+                            </div>
+                            <div class="weapon-back">
+                                <img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EC%84%A0%EB%8F%99%EA%B3%BC%EB%82%A0%EC%A1%B0%20QR.png" class="qr-img-card" referrerpolicy="no-referrer" alt="QR코드">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="weapon-card-flipper" id="weapon-2-flip" onclick="flipWeapon(this)">
+                        <div class="weapon-card-inner">
+                            <div class="weapon-front">
+                                <span class="weapon-name">권위의 가면</span>
+                                <img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EC%9C%84%ED%98%91%EC%B9%B4%EB%93%9C2%20%EA%B6%8C%EC%9C%84%EC%9D%98%20%EA%B0%80%EB%A9%B4.png" class="weapon-img" alt="권위의 가면" referrerpolicy="no-referrer">
+                                <div class="team-input-grid" id="input-grid-w2" onclick="event.stopPropagation()">
+                                    </div>
+                                <button class="replay-btn" id="replay-btn-2" onclick="event.stopPropagation(); showVideoPopup('https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EC%98%81%EC%83%812%20%EA%B6%8C%EC%9C%84%EC%9D%98%EA%B0%80%EB%A9%B4.mp4')">📺 영상 다시보기</button>
+                            </div>
+                            <div class="weapon-back">
+                                <img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EA%B6%8C%EC%9C%84%EC%9D%98%EA%B0%80%EB%A9%B4%20QR.png" class="qr-img-card" referrerpolicy="no-referrer" alt="QR코드">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="weapon-card-flipper" id="weapon-3-flip" onclick="flipWeapon(this)">
+                        <div class="weapon-card-inner">
+                            <div class="weapon-front">
+                                <span class="weapon-name">필터버블</span>
+                                <img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EC%9C%84%ED%98%91%EC%B9%B4%EB%93%9C3%20%ED%95%84%ED%84%B0%EB%B2%84%EB%B8%94.png" class="weapon-img" alt="필터버블" referrerpolicy="no-referrer">
+                                <div class="team-input-grid" id="input-grid-w3" onclick="event.stopPropagation()">
+                                    </div>
+                                <button class="replay-btn" id="replay-btn-3" onclick="event.stopPropagation(); showVideoPopup('https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EC%98%81%EC%83%813%20%ED%95%84%ED%84%B0%EB%B2%84%EB%B8%94.mp4')">📺 영상 다시보기</button>
+                            </div>
+                            <div class="weapon-back">
+                                <img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%ED%95%84%ED%84%B0%EB%B2%84%EB%B8%94%20QR.png" class="qr-img-card" referrerpolicy="no-referrer" alt="QR코드">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="weapon-4">
+                        <div class="boss-left">
+                            <span class="weapon-name">정보조작단 (BOSS)</span>
+                            <div class="money-laundering-alert">
+                                범죄 자금이 세탁되고 있습니다.<br>
+                                현재: <span id="crime-money-amount">0</span>원
+                            </div>
+                            <img src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EC%9C%84%ED%98%91%EC%B9%B4%EB%93%9C4%20%EC%A0%95%EB%B3%B4%EC%A1%B0%EC%9E%91%EB%8B%A8.png" class="weapon-img" alt="정보조작단" referrerpolicy="no-referrer">
+                        </div>
+                        <div class="boss-right">
+                            <div class="boss-top-group">
+                                <div class="danger-alert">⚠️ CRITICAL WARNING</div>
+                                <input type="password" autocomplete="off" class="input-code" placeholder="LAST CODE" onchange="checkBossCode(this)">
+                            </div>
+                            
+                            <div id="fading-words-zone">
+                                <div class="final-warning-text">거짓이 세상을 뒤덮고 있습니다!</div>
+                            </div>
+
+                            <div class="boss-news-container" id="boss-news-feed"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="news-section">
+                    <div class="news-board-title"><지금 우리 나라는...></div>
+                    <img id="news-board-img" src="https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EB%89%B4%EC%8A%A4%EB%B3%B4%EB%93%9C1.png" class="news-img" alt="뉴스 보드" referrerpolicy="no-referrer">
+                </div>
+            </div>
+
+            <div id="view-squad" class="dashboard-view">
+                <div class="team-section">
+                    <div class="team-title"><span>진실탐사대</span> (TEAM STATUS)</div>
+                    <div class="team-grid" id="squad-team-grid">
+                        </div>
+                </div>
+
+                <div class="squad-item-section">
+                    <div class="squad-item-title">🎒 탐사대 보유 아이템 (ITEMS)</div>
+                    <div class="squad-item-grid">
+                        <div class="squad-item"><div class="squad-item-icon">🔍</div><div class="squad-item-name">검증 돋보기</div></div>
+                        <div class="squad-item"><div class="squad-item-icon">🕶️</div><div class="squad-item-name">관점 전환 렌즈</div></div>
+                        <div class="squad-item"><div class="squad-item-icon">💻</div><div class="squad-item-name">디버깅 코드</div></div>
+                        <div class="squad-item"><div class="squad-item-icon">🧩</div><div class="squad-item-name">진실의 조각</div></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+        <div id="mission-video-popup">
+            <video id="mission-video-player" src="" controls autoplay></video>
+            <button class="popup-close-btn" onclick="closeVideoPopup()">닫기 (Close)</button>
+        </div>
+    </div>
+
+    <script>
+        const bossNewsData = [
+            "“개인정보 유출로 딥페이크 영상이 무단으로 제작되어 범죄에 활용되고 있습니다”",
+            "“사이버렉카들이 확인되지 않은 조작된 정보를 무분별하게 퍼다 나르고 있습니다”",
+            "“정치적 입지를 다지기 위해 정치인들이 현 상황을 이용하고 있습니다”",
+            "“국가 시스템이 마비되고 있습니다”",
+            "“정보조작단이 막대한 범죄수익을 거두고 있습니다”",
+            "“정보조작단이 자금을 세탁하여 해외로 도주하려 하고 있습니다!”",
+            "“국민들이 극심한 불안과 공포에 떨고 있습니다”",
+            "“필터버블에 갇힌 특정 세력들의 무력충돌이 우려되고 있습니다”",
+            "“조작된 이미지 하나가 경제시스템을 마비시키고 있습니다”",
+            "“자극적인 이미지와 영상으로 조회수를 올리는 유튜버들이 늘어나고 있습니다”",
+            "“확인되지 않은 영상과 뉴스들로 인해 국가적 혼란이 오고 있습니다”",
+            "“특정 연예인에 대한 마녀사냥이 시작되었습니다”",
+            "“마녀사냥으로 인해 특정 연예인이 삶을 비관하기 시작합니다”",
+            "“젠더갈등이 극심화되고 있습니다”",
+            "“젠더갈등을 이용하는 세력들이 등장합니다”",
+            "“AI를 불법적으로 이용하는 세력으로 혼란이 가중되고 있습니다”",
+            "“진실과는 거리가 먼 자극적인 컨텐츠가 범람합니다”",
+            "“국민들이 서로에 대한 불신이 쌓여갑니다”"
+        ];
+
+        const positiveWords = [
+            "진실", "선한 영향력", "존중", "배려", "이해", "공감", "이타심", 
+            "소통", "인내", "검증", "팩트체크", "책임감", "리터러시", "신뢰"
+        ];
+
+        let teamCount = 6; 
+        let teamStatus = {
+            1: Array(teamCount).fill(0),
+            2: Array(teamCount).fill(0),
+            3: Array(teamCount).fill(0)
+        };
+        let teamScores = Array(13).fill(0); 
+
+        function renderDynamicTeams() {
+            document.getElementById('team-count-display').innerText = teamCount;
+
+            for (let w = 1; w <= 3; w++) {
+                const grid = document.getElementById(`input-grid-w${w}`);
+                grid.innerHTML = "";
+                for (let i = 1; i <= teamCount; i++) {
+                    const isSolved = teamStatus[w][i-1] === 1;
+                    grid.innerHTML += `
+                        <div class="input-group">
+                            <span class="input-label">${i}</span>
+                            <input type="${isSolved ? 'text' : 'password'}" autocomplete="off" 
+                                class="team-input ${isSolved ? 'solved' : ''}" 
+                                onchange="checkTeamCode(this, ${i}, ${w})"
+                                ${isSolved ? 'value="미션 해결!" disabled' : ''}>
+                        </div>
+                    `;
+                }
+            }
+
+            const squadGrid = document.getElementById('squad-team-grid');
+            squadGrid.innerHTML = "";
+            for (let i = 1; i <= teamCount; i++) {
+                let score = teamScores[i] || 0;
+                squadGrid.innerHTML += `
+                    <div class="team-card">
+                        <input type="text" class="team-name-input" value="Team ${i}">
+                        <div class="team-score-box">
+                            <button class="score-btn" onclick="adjustScore(${i}, -10)">-</button>
+                            <span id="score-${i}">${score}</span>
+                            <button class="score-btn" onclick="adjustScore(${i}, 10)">+</button>
+                        </div>
+                        <div class="team-items">
+                            <div class="item-icon-btn" onclick="toggleItem(this)">🔍</div>
+                            <div class="item-icon-btn" onclick="toggleItem(this)">🕶️</div>
+                            <div class="item-icon-btn" onclick="toggleItem(this)">💻</div>
+                            <div class="item-icon-btn" onclick="toggleItem(this)">🧩</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function adjustTeamCount(delta) {
+            let newCount = teamCount + delta;
+            if (newCount < 1 || newCount > 12) return; 
+            
+            teamCount = newCount;
+            for (let w = 1; w <= 3; w++) {
+                let newArr = Array(teamCount).fill(0);
+                for(let i=0; i<Math.min(teamCount, teamStatus[w].length); i++){
+                    newArr[i] = teamStatus[w][i];
+                }
+                teamStatus[w] = newArr;
+            }
+            renderDynamicTeams();
+
+            for (let w = 1; w <= 3; w++) {
+                if(teamStatus[w].every(status => status === 1) && !document.getElementById(`weapon-${w}-flip`).classList.contains('cleared')) {
+                    completeWeapon(w);
+                }
+            }
+        }
+
+        window.onload = () => { renderDynamicTeams(); };
+
+        function changePage(pageNum) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(`page-${pageNum}`).classList.add('active');
+            if(pageNum === 2) startFeedSequence();
+        }
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playAlertSound() {
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.type = 'square'; osc.frequency.value = 800; osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            osc.start(now);
+            gainNode.gain.setValueAtTime(1, now); gainNode.gain.setValueAtTime(0, now + 0.3); gainNode.gain.setValueAtTime(1, now + 0.6); gainNode.gain.setValueAtTime(0, now + 0.9);
+            osc.stop(now + 2.0);
+        }
+
+        function playVideo() {
+            document.getElementById('start-btn').style.display = 'none';
+            const videoContainer = document.getElementById('intro-video-overlay');
+            const video = document.getElementById('intro-video');
+            video.src = "https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EC%98%81%EC%83%811%20%EC%9D%B8%ED%8A%B8%EB%A1%9C.mp4";
+            
+            video.play().catch(e => console.log("자동재생 방지됨: ", e));
+            
+            videoContainer.style.display = 'flex';
+            setTimeout(() => { document.getElementById('intro-check-btn').style.display = 'flex'; }, 5000);
+        }
+
+        function finishVideo() {
+            const videoContainer = document.getElementById('intro-video-overlay');
+            const video = document.getElementById('intro-video');
+            video.pause(); 
+            video.src = "";
+            videoContainer.style.display = 'none';
+            audioCtx.resume().then(() => {
+                playAlertSound();
+                document.getElementById('alert-popup').style.display = 'block';
+                setTimeout(() => { document.getElementById('to-p2').classList.remove('hidden'); }, 3000);
+            });
+        }
+
+        function startFeedSequence() {
+            setTimeout(() => document.getElementById('feed-1').classList.add('feed-visible'), 500);
+            setTimeout(() => document.getElementById('feed-2').classList.add('feed-visible'), 2000);
+            setTimeout(() => document.getElementById('feed-3').classList.add('feed-visible'), 3500);
+        }
+        function flipCard(card) { card.classList.toggle('flipped'); }
+
+        let panicLevel = 90;
+        let bossTimer; 
+        let bossPending = false; // 보스 대기 플래그 다시 활성화
+        let newsTickerInterval;
+        let moneyInterval; 
+        let moneyAmount = 0; 
+
+        function switchDashboardTab(tabName) {
+            document.querySelectorAll('.dashboard-view').forEach(view => view.classList.remove('active-view'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active-tab'));
+            document.getElementById(`view-${tabName}`).classList.add('active-view');
+            if (tabName === 'threats') { document.querySelector('.threat-tab').classList.add('active-tab'); } 
+            else { document.querySelectorAll('.tab-btn')[1].classList.add('active-tab'); }
+        }
+
+        function flipWeapon(cardElement) { cardElement.classList.toggle('flipped'); }
+
+        function checkTeamCode(input, teamNum, weaponId) {
+            let val = input.value.trim();
+            let upperVal = val.toUpperCase();
+            let isCorrect = false;
+
+            if (weaponId === 1 && upperVal === 'FAKE') isCorrect = true;
+            else if (weaponId === 2 && upperVal === 'DEEP') isCorrect = true;
+            else if (weaponId === 3) {
+                if (val === '확증편향' || upperVal === 'GHKRWMDVUSGID') isCorrect = true;
+            }
+
+            if (isCorrect) {
+                input.type = "text"; 
+                input.value = "미션 해결!";
+                input.disabled = true;
+                input.classList.add('solved');
+                
+                teamStatus[weaponId][teamNum - 1] = 1;
+                const allSolved = teamStatus[weaponId].every(status => status === 1);
+                
+                if (allSolved) {
+                    completeWeapon(weaponId);
+                }
+            }
+        }
+
+        function completeWeapon(weaponId) {
+            const cardId = `weapon-${weaponId}-flip`;
+            document.getElementById(cardId).classList.add('cleared');
+
+            panicLevel -= 22; 
+            if(panicLevel < 0) panicLevel = 0;
+            updatePanicBar();
+
+            if (weaponId === 1) {
+                // 선동과 날조 클리어 시 -> 영상 2 (권위의 가면) 재생
+                showVideoPopup('https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EC%98%81%EC%83%812%20%EA%B6%8C%EC%9C%84%EC%9D%98%EA%B0%80%EB%A9%B4.mp4');
+                document.getElementById('replay-btn-2').style.display = 'inline-block';
+                document.getElementById('news-board-img').src = 'https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EB%89%B4%EC%8A%A4%EB%B3%B4%EB%93%9C2.png';
+            } else if (weaponId === 2) {
+                // 권위의 가면 클리어 시 -> 뉴스만 3번으로 교체 (영상은 3번 클리어 시로 미룸)
+                document.getElementById('news-board-img').src = 'https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EB%89%B4%EC%8A%A4%EB%B3%B4%EB%93%9C3.png';
+            } else if (weaponId === 3) {
+                // 필터버블 클리어 시 -> 영상 3 (필터버블) 재생 및 보스 출현 대기 상태 활성화
+                showVideoPopup('https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EC%98%81%EC%83%813%20%ED%95%84%ED%84%B0%EB%B2%84%EB%B8%94.mp4');
+                document.getElementById('replay-btn-3').style.display = 'inline-block';
+                bossPending = true; 
+            }
+        }
+
+        function checkBossCode(input) {
+            const rawVal = input.value.trim().replace(/\s/g, ''); 
+            const upperVal = rawVal.toUpperCase();
+
+            if(rawVal === '디지털리터러시' || upperVal === 'ELWLXJFFLXJFJTL') {
+                const cardContainer = input.closest('#weapon-4');
+                cardContainer.classList.add('cleared');
+                input.disabled = true;
+                input.value = "HACKED";
+                input.style.backgroundColor = "transparent";
+                input.style.border = "none";
+                input.style.color = "var(--accent-cyan)";
+                input.style.fontWeight = "bold";
+
+                clearInterval(bossTimer); 
+                clearInterval(newsTickerInterval);
+                clearInterval(moneyInterval); 
+                panicLevel = 0; 
+                updatePanicBar();
+                
+                document.querySelector('.final-warning-text').style.display = 'none';
+                document.getElementById('boss-news-feed').style.display = 'none';
+                document.querySelector('.danger-alert').style.display = 'none';
+                document.querySelector('.money-laundering-alert').style.display = 'none';
+
+                document.getElementById('news-board-img').src = 'https://ooo9luzdoplzs8wq.public.blob.vercel-storage.com/codeblue/%EB%89%B4%EC%8A%A4%EB%B3%B4%EB%93%9C4.png';
+                document.querySelector('.clear-overlay').style.display = 'flex';
+            } 
+        }
+
+        function showVideoPopup(videoSrc) {
+            const popup = document.getElementById('mission-video-popup');
+            const video = document.getElementById('mission-video-player');
+            video.src = videoSrc;
+            
+            video.play().catch(e => console.log("자동재생 방지됨: ", e));
+            
+            popup.style.display = 'flex';
+        }
+
+        function closeVideoPopup() {
+            const popup = document.getElementById('mission-video-popup');
+            const video = document.getElementById('mission-video-player');
+            video.pause(); 
+            video.src = "";
+            popup.style.display = 'none';
+
+            // 보스 출현 대기 상태라면 팝업 닫힘과 동시에 보스 등장
+            if (bossPending) {
+                triggerBossAppearance();
+                bossPending = false;
+            }
+        }
+
+        function triggerBossAppearance() {
+            const boss = document.getElementById('weapon-4');
+            boss.style.display = 'flex';
+            boss.scrollIntoView({behavior: "smooth", block: "center"});
+            
+            playAlertSound();
+
+            panicLevel = Math.min(100, panicLevel + 10);
+            updatePanicBar();
+
+            bossTimer = setInterval(() => {
+                let oldLevel = panicLevel;
+                if (panicLevel < 90) {
+                    panicLevel = Math.min(90, panicLevel + 2);
+                    updatePanicBar();
+                    if (oldLevel <= 60 && panicLevel > 60) {
+                        playAlertSound();
+                    }
+                } else {
+                    clearInterval(bossTimer);
+                }
+            }, 3000); 
+
+            startBossNewsFeed();
+            startFadingWords();
+            startMoneyCounter();
+        }
+
+        function startMoneyCounter() {
+            const display = document.getElementById('crime-money-amount');
+            moneyInterval = setInterval(() => {
+                moneyAmount += 50000;
+                display.innerText = moneyAmount.toLocaleString();
+            }, 50);
+        }
+
+        function startFadingWords() {
+            const zone = document.getElementById('fading-words-zone');
+            const oldSpans = zone.querySelectorAll('.fading-word');
+            oldSpans.forEach(sp => sp.remove());
+
+            const positions = [];
+            for (let r = 0; r < 3; r++) {
+                for (let c = 0; c < 5; c++) { positions.push({ top: r * 30, left: c * 20 }); }
+            }
+            positions.sort(() => Math.random() - 0.5);
+
+            const wordElements = [];
+            positiveWords.forEach((word, index) => {
+                if (index >= positions.length) return; 
+                const span = document.createElement('span');
+                span.innerText = word;
+                span.className = 'fading-word';
+                const pos = positions[index];
+                span.style.top = pos.top + "%"; span.style.left = pos.left + "%"; span.style.width = "20%";
+                zone.appendChild(span);
+                wordElements.push(span);
+            });
+
+            setTimeout(() => { wordElements.forEach(el => el.classList.add('visible')); }, 100);
+
+            wordElements.sort(() => Math.random() - 0.5);
+            let vanishIndex = 0;
+            const startVanishDelay = 2000; 
+
+            setTimeout(() => {
+                const vanishInterval = setInterval(() => {
+                    if (vanishIndex >= wordElements.length) {
+                        clearInterval(vanishInterval);
+                        setTimeout(() => {
+                             const warningText = document.querySelector('.final-warning-text');
+                             if(warningText) warningText.style.display = 'block';
+                        }, 4000); 
+                        return;
+                    }
+                    const el = wordElements[vanishIndex];
+                    el.classList.remove('visible'); el.classList.add('vanishing');
+                    vanishIndex++;
+                }, 800); 
+            }, startVanishDelay);
+        }
+
+        function startBossNewsFeed() {
+            const container = document.getElementById('boss-news-feed');
+            addTickerItem(container);
+            newsTickerInterval = setInterval(() => { addTickerItem(container); }, 3500);
+        }
+
+        function addTickerItem(container) {
+            const msg = document.createElement('div');
+            msg.innerText = "🚨 " + bossNewsData[Math.floor(Math.random() * bossNewsData.length)];
+            msg.className = 'boss-news-item';
+            container.appendChild(msg);
+            if (container.children.length > 5) { container.removeChild(container.firstChild); }
+        }
+
+        function updatePanicBar() {
+            const bar = document.getElementById('panic-bar');
+            const valText = document.getElementById('panic-value');
+            const statusText = document.getElementById('panic-text');
+            bar.style.width = panicLevel + '%';
+            valText.innerText = panicLevel + '%';
+            valText.className = 'panic-value';
+            statusText.className = 'panic-status';
+            bar.className = 'big-progress-fill';
+
+            if (panicLevel === 0) {
+                valText.classList.add('status-safe'); statusText.classList.add('status-safe');
+                statusText.innerText = "안전 (시스템 정상화)"; bar.classList.add('bar-safe');
+            } else if (panicLevel > 60) {
+                valText.classList.add('status-danger'); statusText.classList.add('status-danger');
+                statusText.innerText = "심각 (혼란과 카오스)"; bar.classList.add('bar-danger');
+            } else if (panicLevel > 20) {
+                valText.classList.add('status-warning'); statusText.classList.add('status-warning');
+                statusText.innerText = "경계 (불안 확산 중)"; bar.classList.add('bar-warning');
+            } else {
+                valText.classList.add('status-safe'); statusText.classList.add('status-safe');
+                statusText.innerText = "안전 (진실 회복 완료)"; bar.classList.add('bar-safe');
+            }
+        }
+
+        function adjustScore(teamId, amount) {
+            const scoreSpan = document.getElementById(`score-${teamId}`);
+            let currentScore = parseInt(scoreSpan.innerText);
+            currentScore += amount;
+            if(currentScore < 0) currentScore = 0;
+            scoreSpan.innerText = currentScore;
+            teamScores[teamId] = currentScore; // 상태 보존
+        }
+
+        function toggleItem(btnElement) { btnElement.classList.toggle('active'); }
+    </script>
+</body>
+</html>
