@@ -1061,5 +1061,51 @@
 
         function toggleItem(btnElement) { btnElement.classList.toggle('active'); }
     </script>
+
+<script>
+    // 1. 키보드 단축키 차단 (F12, Ctrl+Shift+I, Ctrl+U 등)
+    document.addEventListener('keydown', function(event) {
+        if (event.keyCode === 123 || // F12
+           (event.ctrlKey && event.shiftKey && event.keyCode === 73) || // Ctrl+Shift+I
+           (event.ctrlKey && event.shiftKey && event.keyCode === 74) || // Ctrl+Shift+J
+           (event.ctrlKey && event.keyCode === 85)) { // Ctrl+U
+            event.preventDefault();
+            event.returnValue = false;
+        }
+    });
+
+    // 2. 개발자 도구 강제 정지 (무한 디버거 덫)
+    setInterval(function() {
+        var before = new Date().getTime();
+        debugger; 
+        var after = new Date().getTime();
+        if (after - before > 100) {
+            document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:50px;'>보안 정책에 의해 접근이 차단되었습니다.</h1>";
+        }
+    }, 1000);
+</script>
+
+    <script>
+        // 1. 마우스 우클릭 방지 (contextmenu 이벤트 차단)
+        document.addEventListener('contextmenu', function(event) {
+            event.preventDefault();
+        });
+
+        // 추가 팁: 드래그 및 복사도 방지하고 싶다면 아래 주석을 해제하세요.
+        /*
+        // 2. 텍스트 드래그 방지
+        document.addEventListener('selectstart', function(event) {
+            event.preventDefault();
+        });
+
+        // 3. 복사(Ctrl+C) 방지
+        document.addEventListener('copy', function(event) {
+            event.preventDefault();
+        });
+        */
+    </script>
+
+    
 </body>
 </html>
+
